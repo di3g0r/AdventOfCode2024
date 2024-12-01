@@ -1,5 +1,3 @@
-### Day 1.1
-
 def create_lists():
     list1 = []
     list2 = []
@@ -54,6 +52,15 @@ def merge_sort(arr, left, right):
         merge_sort(arr, mid + 1, right)
         merge(arr, left, mid, right)
 
+def count_frequencies(numbers):
+    frequencies = {}
+    for num in numbers:
+        if num in frequencies:
+            frequencies[num] += 1
+        else:
+            frequencies[num] = 1
+    return frequencies
+
 def main():
     lists = create_lists()
     list1, list2 = lists[0], lists[1]
@@ -63,14 +70,21 @@ def main():
     merge_sort(list1, 0, len_lists)
     merge_sort(list2, 0, len_lists)
 
+    dic = count_frequencies(list2)
+    print(dic)
+
     total = 0
 
     for i in range(0, len_lists+1):
         #print(list1[i], " - ", list2[i], "= ", abs(list1[i] - list2[i]))
-        total += abs(list1[i] - list2[i])
+        actual = list1[i]
+        print(actual)
+        if actual in dic:
+            total += actual * dic[actual]
 
     print(total)
     return total
+    #print(total)
 
     
 main()
