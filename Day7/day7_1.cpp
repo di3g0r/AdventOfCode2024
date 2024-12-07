@@ -14,7 +14,6 @@ std::vector<bool> check_numbers(std::vector<long long> firstNumbers, std::vector
         for(int mask = 0; mask < (1 << (nums-1)) && !found; mask++) {
             long long testResult = correspondingNumbers[i][0];
             
-            // Evaluate left to right using the current combination
             for(int j = 0; j < nums-1; j++) {
                 if(mask & (1 << j)) {
                     testResult *= correspondingNumbers[i][j+1];
@@ -43,9 +42,7 @@ int main() {
         return 1;
     }
     
-    // Vector to store the first numbers (190, 3267, etc.)
     std::vector<long long> firstNumbers;
-    // Vector of vectors to store the corresponding numbers for each line
     std::vector<std::vector<int>> correspondingNumbers;
     
     std::string line;

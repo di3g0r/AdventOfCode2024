@@ -18,7 +18,7 @@ long long evaluate_expression(const std::vector<int>& numbers, const std::vector
             result += numbers[i + 1];
         } else if (operators[i] == '*') {
             result *= numbers[i + 1];
-        } else if (operators[i] == '|') {  // Using '|' for concatenation
+        } else if (operators[i] == '|') { 
             result = concatenate(result, numbers[i + 1]);
         }
     }
@@ -40,7 +40,7 @@ bool try_all_combinations(const std::vector<int>& numbers, long long target) {
             else if (op == 1) operators[i] = '*';
             else if (op == 2) operators[i] = '|';
             else {
-                valid_combination = false;  // Skip invalid combinations
+                valid_combination = false;  
                 break;
             }
         }
