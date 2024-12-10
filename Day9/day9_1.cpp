@@ -2,110 +2,100 @@
 #include <fstream>
 #include <sstream>
 #include <string>
-#include <cstdlib> // For std::atoi
-
+#include <vector>
 
 std::string disk_map(std::string fileContents) {
     std::string disk_space = "";
-    int num = 0;
-    std::string current_number = "";
+    int id = 0;
+    bool is_file = true;
 
-    for (size_t i = 0; i < fileContents.size(); ++i) {
-        if (fileContents[i] == '\n' || fileContents[i] == ' ') continue;
+    for (char ch : fileContents) {
+        if (ch == ' ' || ch == '\n') continue;
         
-        // Print consecutive pairs to see what we're reading
-        if (i % 2 == 0) {
-            std::cout << fileContents[i] << fileContents[i+1] << " "; 
-        }
+        int blocks = ch - '0';
         
-        if (i % 2 == 0) { // File size
-            int file_blocks = fileContents[i] - '0';
-            for(int j = 0; j < file_blocks; j++){
-                disk_space += std::to_string(num);
+        if (is_file) {
+            for(int j = 0; j < blocks; j++) {
+                disk_space += std::to_string(id);
             }
-            num++;
-        } else { // Free space
-            int free_blocks = fileContents[i] - '0';
-            for(int j = 0; j < free_blocks; j++){
+            id++;
+            is_file = false;
+        } else {
+            for(int j = 0; j < blocks; j++) {
                 disk_space += '#';
             }
+            is_file = true;
         }
     }
     return disk_space;
 }
 
 std::string ordered_disk(std::string disk_map) {
-    int first_free = 0;
-    // Find first free space
-    while (first_free < disk_map.length() && disk_map[first_free] != '#') {
+    std::vector<char> arr(disk_map.begin(), disk_map.end());
+    size_t first_free = 0;
+
+    while(first_free < arr.size() && arr[first_free] != '#') {
         first_free++;
     }
-    
-    int i = disk_map.length() - 1;
-    // Find last file
-    while (i >= 0 && disk_map[i] == '#') {
+
+    size_t i = arr.size() - 1;
+    while(i > 0 && arr[i] == '#') {
         i--;
     }
-    
-    while (i > first_free) {
-        disk_map[first_free] = disk_map[i];
-        disk_map[i] = '#';
-        
-        // Find next file from end
-        while (i >= 0 && disk_map[i] == '#') {
+
+    while(i > first_free) {
+        if(first_free < arr.size() && i < arr.size()) {
+            arr[first_free] = arr[i];
+            arr[i] = '#';
+
             i--;
-        }
-        // Find next free space from start
-        while (first_free < disk_map.length() && disk_map[first_free] != '#') {
+            while(i > first_free && arr[i] == '#') {
+                i--;
+            }
+
             first_free++;
+            while(first_free < arr.size() && arr[first_free] != '#') {
+                first_free++;
+            }
         }
     }
-    
-    // Remove trailing #s
-    while (!disk_map.empty() && disk_map.back() == '#') {
-        disk_map.pop_back();
+
+    std::string result(arr.begin(), arr.end());
+    while (!result.empty() && result.back() == '#') {
+        result.pop_back();
     }
-    
-    return disk_map;
+
+    return result;
 }
 
-int check_sum(std::string disk_map){
-    int sum = 0;
-    for(int i=0; i < disk_map.length(); i++){
-        int num = disk_map[i] - '0';
-        sum += i * num;
+long long check_sum(const std::string& disk_map) {
+    long long sum = 0;
+    for(size_t i = 0; i < disk_map.length(); i++) {
+        if(disk_map[i] != '#') {
+            int num = disk_map[i] - '0';
+            sum += i * num;
+        }
     }
-
-    std::cout << sum << "\n";
-
     return sum;
 }
 
 int main() {
-    std::ifstream file("input.txt"); // Open the file
+    std::ifstream file("input.txt");
     if (!file.is_open()) {
         std::cerr << "Error: Could not open the file!" << std::endl;
         return 1;
     }
 
     std::ostringstream buffer;
-    buffer << file.rdbuf(); 
-    std::string fileContents = buffer.str(); 
+    buffer << file.rdbuf();
+    std::string fileContents = buffer.str();
 
-    //std::cout << "File contents:\n" << fileContents << std::endl;
-    std::string disk = " ";
+    std::string disk = disk_map(fileContents);
+    std::string ordered = ordered_disk(disk);
+    long long result = check_sum(ordered);
 
-    disk = disk_map(fileContents);
+    std::cout << result << std::endl;
 
-    std::string order = " ";
-
-    order = ordered_disk(disk);
-
-    check_sum(order);
-
-    file.close(); // Close the file
+    file.close();
     return 0;
 }
-
-// 0099811188827773336446555566
-// 009981118882777333644655556666
