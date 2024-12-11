@@ -12,7 +12,7 @@ def score(i, j):
     
     ans = 0
     stack = [(i, j)]
-    visited = set([(i, j)])  # Add initial position to visited
+    visited = set([(i, j)])  
     
     while stack:
         curi, curj = stack.pop()
