@@ -93,7 +93,7 @@ int main() {
     }
     std::cout << "\n";
     
-    int result = stones(values, 25);
+    int result = stones(values, 75);
     std::cout << "Final count after 25 iterations: " << result << "\n";
     
     return 0;
