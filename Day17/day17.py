@@ -1,91 +1,94 @@
-def read_program(file_path):
-    """Reads the program and initial registers from the input file."""
-    with open(file_path, 'r') as file:
-        lines = file.read().strip().splitlines()
+# pylint: disable=C0114,C0116,C0301,C0209,W1514,C0414,C0200,E0001
 
-    # Debug: Show the lines read from the file
-    print("Lines read from file:", lines)
+from time import perf_counter_ns
+from typing import Any
+import os
 
-    # Parse initial register values
-    registers = {}
-    for line in lines[:3]:
-        key, value = line.split(': ')
-        registers[key] = int(value)
-    
-    # Skip any blank lines and find the program line
-    program = []
-    for line in lines[3:]:
-        if line.strip():  # Skip blank lines
-            print("Program line before processing:", line)  # Debug: Show raw program line
-            program_str = line.replace("Program: ", "").strip()
-            program = [int(num) for num in program_str.split(',') if num]
-            break  # Exit the loop once we find the program line
-
-    # Debug: Show parsed program
-    print("Parsed program:", program)
-
-    return registers, program
+input_file = os.path.join(os.path.dirname(__file__), "input.txt")
+# input_file = os.path.join(os.path.dirname(__file__), "test.txt")
 
 
+def profiler(method):
+
+    def wrapper_method(*args: Any, **kwargs: Any) -> Any:
+        start_time = perf_counter_ns()
+        ret = method(*args, **kwargs)
+        stop_time = perf_counter_ns() - start_time
+        time_len = min(9, ((len(str(stop_time))-1)//3)*3)
+        time_conversion = {9: 'seconds', 6: 'milliseconds',
+                           3: 'microseconds', 0: 'nanoseconds'}
+        print(f"Method {method.__name__} took : {
+              stop_time / (10**time_len)} {time_conversion[time_len]}")
+        return ret
+
+    return wrapper_method
 
 
-
-def execute_program(registers, program):
-    """Executes the 3-bit computer program."""
-    A, B, C = registers["Register A"], registers["Register B"], registers["Register C"]
+def exec(prog, reg):
+    pc = 0
     output = []
-    ip = 0  # Instruction pointer
 
-    while ip < len(program):
-        opcode = program[ip]
-        operand = program[ip + 1] if ip + 1 < len(program) else None
+    while True:
+        if pc > len(prog) - 1:
+            return output
 
-        if opcode == 0:  # adv
-            denominator = 2 ** resolve_combo_operand(operand, A, B, C)
-            A //= denominator
-        elif opcode == 1:  # bxl
-            B ^= operand
-        elif opcode == 2:  # bst
-            B = resolve_combo_operand(operand, A, B, C) % 8
-        elif opcode == 3:  # jnz
-            if A != 0:
-                ip = operand
+        op = prog[pc]
+        opreand = prog[pc+1]
+        assert 0 <= opreand < 7
+        combo = opreand if opreand < 4 else reg[opreand-4]
+
+        if op == 0:  # adv
+            reg[0] = reg[0] // 2 ** combo
+        elif op == 1:  # bxl
+            reg[1] ^= opreand
+        elif op == 2:  # bst
+            reg[1] = combo % 8
+        elif op == 3:  # jnz
+            if reg[0] != 0:
+                pc = opreand
                 continue
-        elif opcode == 4:  # bxc
-            B ^= C
-        elif opcode == 5:  # out
-            output.append(resolve_combo_operand(operand, A, B, C) % 8)
-        elif opcode == 6:  # bdv
-            denominator = 2 ** resolve_combo_operand(operand, A, B, C)
-            B = A // denominator
-        elif opcode == 7:  # cdv
-            denominator = 2 ** resolve_combo_operand(operand, A, B, C)
-            C = A // denominator
-        
-        # Increment instruction pointer
-        ip += 2
+        elif op == 4:  # bxl
+            reg[1] ^= reg[2]
+        elif op == 5:
+            output.append(str(combo % 8))
+        elif op == 6:  # bdv
+            reg[1] = reg[0] // 2 ** combo
+        elif op == 7:  # cdv
+            reg[2] = reg[0] // 2 ** combo
 
-    return ','.join(map(str, output))
+        pc += 2
 
 
-def resolve_combo_operand(operand, A, B, C):
-    """Resolves the value of a combo operand."""
-    if operand <= 3:
-        return operand
-    elif operand == 4:
-        return A
-    elif operand == 5:
-        return B
-    elif operand == 6:
-        return C
-    else:
-        raise ValueError("Invalid combo operand")
+@profiler
+def part_1():
+    with open(input_file) as f:
+        ps = f.read().split("\n\n")
 
+    reg = []
+    for l in ps[0].splitlines():
+        p = l.split(":")
+        reg.append(int(p[1]))
 
-# Main logic
-input_file = "Day17/input.txt"
-registers, program = read_program(input_file)
-result = execute_program(registers, program)
-print(registers)
-print(program)
-print(result)
+    prog = list(map(int, ps[1].split(":")[1].split(",")))
+    print(",".join(exec(prog, reg)))
+
+@profiler
+def part_2():
+    with open(input_file) as f:
+        ps = f.read().split("\n\n")
+
+    prog = list(map(int, ps[1].split(":")[1].split(",")))
+    to_visit = [(len(prog), 0)]
+    while to_visit:
+        pos, a = to_visit.pop(0)
+        for i in range(8):
+            n_a = a*8 + i
+            o = list(map(int, exec(prog, [n_a, 0, 0])))
+            if o == prog[pos-1:]:
+                to_visit.append((pos - 1, n_a))
+                if len(o) == len(prog):
+                    print(n_a)
+
+if __name__ == "__main__":
+    part_1()
+    part_2()
