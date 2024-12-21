@@ -48,7 +48,6 @@ public:
         }
     }
 
-    // Fast calculation of distances from any point to end
     vector<vector<int>> calculateDistancesToEnd() {
         vector<vector<int>> distances(rows, vector<int>(cols, INT_MAX));
         queue<pair<Point, int>> q;
@@ -75,24 +74,20 @@ public:
     }
 
     vector<int> findShortcuts() {
-        // Calculate base distances first
         vector<vector<int>> distToEnd = calculateDistancesToEnd();
         int baseDistance = distToEnd[start.row][start.col];
         vector<int> savings;
         
-        // For each walkable position
         for (int row = 0; row < rows; row++) {
             for (int col = 0; col < cols; col++) {
                 if (!isWalkable(row, col) || distToEnd[row][col] == INT_MAX) continue;
                 int startDist = distToEnd[row][col];
                 
-                // Try each direction for first cheat step
                 for (auto [dr1, dc1] : dirs) {
                     int r1 = row + dr1;
                     int c1 = col + dc1;
                     if (!isValid(r1, c1)) continue;
                     
-                    // Try each direction for second cheat step
                     for (auto [dr2, dc2] : dirs) {
                         int r2 = r1 + dr2;
                         int c2 = c1 + dc2;
@@ -101,9 +96,8 @@ public:
                         int endDist = distToEnd[r2][c2];
                         if (endDist == INT_MAX) continue;
                         
-                        // Calculate total path length using this cheat
                         int distToStart = baseDistance - startDist;
-                        int totalDist = distToStart + 2 + endDist; // +2 for the two cheat steps
+                        int totalDist = distToStart + 2 + endDist; 
                         
                         if (totalDist < baseDistance) {
                             savings.push_back(baseDistance - totalDist);
