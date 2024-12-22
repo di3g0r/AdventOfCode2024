@@ -9,19 +9,21 @@ seq_to_total = {}
 with open('Day22/input.txt', 'r') as file:
     for line in file:
         num = int(line)
-        buyer = [num % 10]
+        seen = set()
+        prev = num % 10
+        diffs = []
         for _ in range(2000):
             num = step(num)
-            buyer.append(num % 10)
-
-        seen = set()
-        for i in range(len(buyer) - 4):
-            a,b,c,d,e = buyer[i:i + 5]
-            seq = (b-a, c-b, d-c, e-d)
-            if seq in seen: continue
-            seen.add(seq)
-            if seq not in seq_to_total: seq_to_total[seq] = 0
-            seq_to_total[seq] += e
+            diffs.append(prev - num % 10)
+            prev = num % 10
+            if len(diffs) >= 4:
+                seq = tuple(diffs)
+                diffs.pop(0)
+                if seq in seen: continue
+                seen.add(seq)
+                if seq not in seq_to_total: seq_to_total[seq] = 0
+                seq_to_total[seq] += num % 10
+                
 
 print(max(seq_to_total.values()))
     
